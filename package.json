@@ -1,0 +1,17 @@
+{
+  "name": "tree-sitter-pyjsx",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "scripts": {
+    "generate": "tree-sitter generate"
+  },
+  "dependencies": {
+    "tree-sitter-cli": "^0.24.6"
+  }
+}
