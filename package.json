@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "generate": "tree-sitter generate"
+    "generate": "tree-sitter generate",
+    "init": "tree-sitter init-config",
+    "example": "tree-sitter parse examples/plain.py"
   },
   "author": "",
   "license": "ISC",
