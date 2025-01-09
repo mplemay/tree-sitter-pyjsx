@@ -17,22 +17,65 @@ module.exports = grammar(python, {
       repeat(choice($.jsx_element, $.jsx_fragment, $._statement))
     ),
 
-    jsx_element: $ => seq(
-      "<",
-      $.element_name,
-      ">",
-      repeat(choice($.jsx_element, $.jsx_fragment, $._statement)),
-      "</",
-      $.element_name,
-      ">"
+    jsx_element: $ => choice(
+      seq(
+        "<",
+        $.element_name,
+        repeat($.jsx_attribute),
+        ">",
+        repeat($.jsx_child),
+        "</",
+        $.element_name,
+        ">"
+      ),
+      seq(
+        "<",
+        $.element_name,
+        repeat($.jsx_attribute),
+        "/>"
+      )
     ),
 
     jsx_fragment: $ => seq(
       "<>",
-      repeat(choice($.jsx_element, $.jsx_fragment, $._statement)),
+      repeat($.jsx_child),
       "</>"
     ),
 
-    element_name: $ => /[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/
+    jsx_child: $ => choice(
+      $.jsx_element,
+      $.jsx_fragment,
+      $.jsx_expression,
+      $.jsx_text
+    ),
+
+    jsx_attribute: $ => choice(
+      seq($.attribute_name, "=", choice($.attribute_string_value, $.jsx_expression)),
+      $.jsx_spread_attribute
+    ),
+
+    jsx_spread_attribute: $ => seq(
+      "{",
+      "...",
+      $._expressions,
+      "}"
+    ),
+
+    jsx_expression: $ => seq(
+      "{",
+      $._expressions,
+      "}"
+    ),
+
+    jsx_text: $ => /[^<>{}\s][^<>{}]*/,
+
+    element_name: $ => /[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/,
+    
+    attribute_name: $ => /[^\s='\"<>{}]+/,
+    
+    attribute_string_value: $ => choice(
+      seq("'", /[^']*/, "'"),
+      seq('"', /[^"]*/, '"')
+    )
   }
 });
