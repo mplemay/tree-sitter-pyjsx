@@ -1,5 +1,5 @@
 /**
- * @file Pyjsx grammar for tree-sitter
+ * @file PyJSX grammar for tree-sitter
  * @author Matt LeMay <mplemay97@gmail.com>
  * @license MIT
  */
@@ -7,73 +7,102 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
-const python = require('tree-sitter-python/grammar');
+module.exports = grammar({
+  name: 'pyjsx',
 
-module.exports = grammar(python, {
-  name: "pyjsx",
+  extras: _ => [],
 
   rules: {
-    source_file: $ => seq(
-      repeat(choice($.jsx_element, $.jsx_fragment, $._statement))
-    ),
+    source_file: $ => repeat(choice(
+      $.python_code,
+      $.jsx_element,
+      $.jsx_fragment,
+      $.jsx_expression,
+      $.content
+    )),
+
+    // Python code that's not inside JSX
+    python_code: _ => prec.right(repeat1(choice(
+      /[^<{]+/,  // Any chars except JSX start tokens
+      /[<{]/     // < or { when not starting JSX
+    ))),
+
+    // Regular text content between JSX tags
+    content: _ => prec.right(repeat1(/[^<>{]+/)),
 
     jsx_element: $ => choice(
+      // Regular element with children
       seq(
-        "<",
+        '<',
         $.element_name,
         repeat($.jsx_attribute),
-        ">",
-        repeat($.jsx_child),
-        "</",
+        '>',
+        repeat(choice(
+          $.jsx_element,
+          $.jsx_fragment,
+          $.jsx_expression,
+          $.content
+        )),
+        '</',
         $.element_name,
-        ">"
+        '>'
       ),
+      // Self-closing element
       seq(
-        "<",
+        '<',
         $.element_name,
         repeat($.jsx_attribute),
-        "/>"
+        '/>'
       )
     ),
 
     jsx_fragment: $ => seq(
-      "<>",
-      repeat($.jsx_child),
-      "</>"
+      '<>',
+      repeat(choice(
+        $.jsx_element,
+        $.jsx_fragment,
+        $.jsx_expression,
+        $.content
+      )),
+      '</>'
     ),
 
-    jsx_child: $ => choice(
-      $.jsx_element,
-      $.jsx_fragment,
-      $.jsx_expression,
-      $.jsx_text
+    jsx_expression: $ => seq(
+      '{',
+      $.python_expression,
+      '}'
     ),
 
     jsx_attribute: $ => choice(
-      seq($.attribute_name, "=", choice($.attribute_string_value, $.jsx_expression)),
+      seq(
+        $.attribute_name,
+        '=',
+        choice(
+          $.attribute_string_value,
+          $.jsx_expression
+        )
+      ),
       $.jsx_spread_attribute
     ),
 
     jsx_spread_attribute: $ => seq(
-      "{",
-      "...",
-      $._expressions,
-      "}"
+      '{',
+      '...',
+      $.python_expression,
+      '}'
     ),
 
-    jsx_expression: $ => seq(
-      "{",
-      $._expressions,
-      "}"
-    ),
+    // Python expression inside JSX expressions
+    python_expression: _ => prec.right(repeat1(choice(
+      /[^}]+/,  // Any chars except closing brace
+      /}/       // Closing brace when not ending expression
+    ))),
 
-    jsx_text: $ => /[^<>{}\s][^<>{}]*/,
-
-    element_name: $ => /[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/,
+    element_name: _ => /[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*/,
     
-    attribute_name: $ => /[^\s='\"<>{}]+/,
+    attribute_name: _ => /[^\s='\"<>{}]+/,
     
-    attribute_string_value: $ => choice(
+    attribute_string_value: _ => choice(
       seq("'", /[^']*/, "'"),
       seq('"', /[^"]*/, '"')
     )
