@@ -3,15 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "generate": "tree-sitter generate"
   },
   "author": "",
   "license": "ISC",
   "description": "",
-  "scripts": {
-    "generate": "tree-sitter generate"
-  },
   "dependencies": {
-    "tree-sitter-cli": "^0.24.6"
+    "tree-sitter-cli": "^0.24.6",
+    "tree-sitter-python": "^0.23.6"
   }
 }
